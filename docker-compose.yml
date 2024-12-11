@@ -13,7 +13,7 @@ services:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    restart: always
 
   api:
     build:
@@ -29,6 +29,7 @@ services:
       DB_USER: user
       DB_PASSWORD: userpassword
       DB_NAME: mi_base_de_datos
+    restart: always
 
 volumes:
   mysql_data:
