@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  database:
+    image: mysql:8.0
+    container_name: mysql_container
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mi_base_de_datos
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpassword
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api_container
+    ports:
+      - "3000:3000"
+    depends_on:
+      - database
+    environment:
+      DB_HOST: database
+      DB_USER: user
+      DB_PASSWORD: userpassword
+      DB_NAME: mi_base_de_datos
+
+volumes:
+  mysql_data:
+
