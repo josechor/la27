@@ -23,8 +23,8 @@ const createUser = async (req, res) => {
 
     console.log(hasedPassword);
     const query =
-      "INSERT INTO demons (email, demon_name, user_name, password) VALUES (?, ?, ?, ?)";
-    await pool.query(query, [email, demon_name, user_name, hasedPassword]);
+      "INSERT INTO demons (id, email, demon_name, user_name, password) VALUES (?, ?, ?, ?)";
+    await pool.query(query, [crypto.randomUUID(), email, demon_name, user_name, hasedPassword]);
     console.log("User created successfully");
 
     res.status(200).json({ message: "User created successfully" });
@@ -34,9 +34,12 @@ const createUser = async (req, res) => {
   }
 };
 
-const loginUser = async (req, res) => {
+const authUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    if(!email || !password){
+      return res.status(400).json({ message: "Email and password are required" });
+    }
     const [rows] = await pool.query("SELECT * FROM demons WHERE email = ?", [
       email,
     ]);
@@ -51,11 +54,12 @@ const loginUser = async (req, res) => {
     if (!isPasswordMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
-
-    res.json({ message: "Login successful" });
+    console.log(user)
+    delete user.password;
+    res.json(user);
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
   }
 };
 
-export { getUser, createUser, loginUser };
+export { getUser, createUser, authUser };
