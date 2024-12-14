@@ -31,6 +31,21 @@ const getFollowers = async(req, res) => {
   }
 }
 
+const getFollowing = async(req,res) => {
+  try{
+    const [rows] = await pool.query("SELECT d.demon_name, d.user_name FROM demons d JOIN followers f ON d.id = f.followed_id  WHERE f.follower_id = ?",
+      [req.params.id]
+    );
+    if(rows.length === 0){
+      return res.status(200).json({message: "No follows found"});
+    }
+    console.log(rows);
+    res.json(rows);
+  }catch (error) {
+    res.status(500).json({ message: "Internal server error: ", error });
+  }
+}
+
 const createUser = async (req, res) => {
   try {
     const { email, demon_name, user_name, password } = req.body;
@@ -73,4 +88,4 @@ const authUser = async (req, res) => {
   }
 };
 
-export { getUser, getFollowers, createUser, authUser };
+export { getUser, getFollowers, getFollowing, createUser, authUser };
