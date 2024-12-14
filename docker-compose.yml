@@ -5,8 +5,8 @@ services:
     image: mysql:8.0
     container_name: mysql_container
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: mi_base_de_datos
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: la27_db
       MYSQL_USER: user
       MYSQL_PASSWORD: userpassword
     ports:
@@ -28,7 +28,7 @@ services:
       DB_HOST: database
       DB_USER: user
       DB_PASSWORD: userpassword
-      DB_NAME: mi_base_de_datos
+      DB_NAME: la27_db
     restart: always
 
 volumes:
