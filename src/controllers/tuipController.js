@@ -34,10 +34,11 @@ const getTuips = async (req, res) => {
 
 const createTuip = async (req, res) => {
   try {
-    const { demonId, content, multimedia } = req.body;
+    const { content, multimedia } = req.body;
+    const userData = req.userData;
     const query =
       "INSERT INTO tuips (demon_id, content, multimedia) VALUES (?, ?, ?)";
-    await pool.query(query, [demonId, content, multimedia]);
+    await pool.query(query, [userData.id, content, multimedia]);
     res.status(201).json({ message: "Tuip created successfully" });
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
