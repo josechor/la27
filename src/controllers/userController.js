@@ -23,8 +23,8 @@ const createUser = async (req, res) => {
 
     console.log(hasedPassword);
     const query =
-      "INSERT INTO demons (id, email, demon_name, user_name, password) VALUES (?, ?, ?, ?)";
-    await pool.query(query, [crypto.randomUUID(), email, demon_name, user_name, hasedPassword]);
+      "INSERT INTO demons (id, email, demon_name, user_name) VALUES (?, ?, ?, ?)";
+    await pool.query(query, [crypto.randomUUID(), email, demon_name, user_name]);
     console.log("User created successfully");
 
     res.status(200).json({ message: "User created successfully" });
