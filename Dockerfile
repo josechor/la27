@@ -6,13 +6,15 @@ WORKDIR /app
 
 # Copia los archivos del proyecto
 COPY package*.json ./
+
+RUN npm install -g nodemon
+
+
+# Instala las dependencias (incluso las de desarrollo)
 RUN npm install
 
+# Copia el resto del código del proyecto
 COPY . .
 
 # Expón el puerto 3000
 EXPOSE 3000
-
-# Comando para iniciar la API
-CMD ["npm", "start"]
-

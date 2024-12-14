@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   database:
     image: mysql:8.0
@@ -29,8 +27,10 @@ services:
       DB_USER: user
       DB_PASSWORD: user
       DB_NAME: la27_db
+    volumes:
+      - .:/app  # Monta el código local en el contenedor
     restart: always
+    command: ["npm", "run", "dev"]  # Ejecuta el script de nodemon
 
 volumes:
   mysql_data:
-
