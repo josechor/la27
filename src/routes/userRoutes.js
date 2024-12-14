@@ -3,7 +3,7 @@ import { getUser, getFollowers, getFollowing, authUser, createUser } from "../co
 
 const userRoutes = Router();
 
-userRoutes.get("/:id", getUser);
+userRoutes.get("/:username", getUser);
 userRoutes.get("/:id/followers", getFollowers);
 userRoutes.get("/:id/following", getFollowing);
 userRoutes.post("/auth", authUser)
