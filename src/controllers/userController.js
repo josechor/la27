@@ -249,6 +249,39 @@ const updateUser = async (req, res) => {
   }
 }
 
+const followUser = async (req, res) => {
+  try{
+    const [followedid] = await pool.query("SELECT id FROM demons WHERE user_name = ?", [req.params.username]);
+    const userData = req.userData;
+    if(followedid.length == 0){
+      return res.status(404).json({message: "User not found"});
+    }
+    const query =
+      "INSERT INTO followers(follower_id, followed_id) VALUES (?, ?)";
+
+    await pool.query(query, [userData.id, followedid[0].id]);
+    return res.status(200).json({message: "User followed successfully"});
+  }catch (error) {
+    res.status(500).json({ message: "Internal server error: ", error });
+  }
+}
+
+const unfollowUser = async (req, res) => {
+  try{
+    const [followedid] = await pool.query("SELECT id FROM demons WHERE user_name = ?", [req.params.username]);
+    const userData = req.userData;
+    if(followedid.length == 0){
+      return res.status(404).json({message: "User not found"});
+    }
+    const query = "DELETE FROM followers WHERE follower_id = ?  AND followed_id = ?";
+    await pool.query(query, [userData.id, followedid[0].id]);
+    return res.status(200).json({message: "User unfollowed successfully"});
+
+  }catch (error) {
+    res.status(500).json({ message: "Internal server error: ", error });
+  }
+}
+
 export {
   getUser,
   getFollowers,
@@ -257,4 +290,6 @@ export {
   authUser, 
   updateUser,
   getUserData,
+  followUser,
+  unfollowUser,
 };
