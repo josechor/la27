@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { getUser, getFollowers, getFollowing, authUser, createUser } from "../controllers/userController.js";
+import { getUser, getFollowers, getFollowing, authUser, createUser, updateUser } from "../controllers/userController.js";
+import authMiddleware from "../middlewares/authMiddleware.js";
 
 const userRoutes = Router();
 
@@ -8,5 +9,6 @@ userRoutes.get("/:id/followers", getFollowers);
 userRoutes.get("/:id/following", getFollowing);
 userRoutes.post("/auth", authUser)
 userRoutes.post("/", createUser);
+userRoutes.patch("/", authMiddleware, updateUser);
 
 export { userRoutes };
