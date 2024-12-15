@@ -1,8 +1,10 @@
 import { Router } from "express";
-import { getUser, getFollowers, getFollowing, authUser, createUser } from "../controllers/userController.js";
+import { getUser, getFollowers, getFollowing, authUser, createUser, getUserData } from "../controllers/userController.js";
+import authMiddleware from "../middlewares/authMiddleware.js";
 
 const userRoutes = Router();
 
+userRoutes.get("/userData", authMiddleware, getUserData)
 userRoutes.get("/:username", getUser);
 userRoutes.get("/:id/followers", getFollowers);
 userRoutes.get("/:id/following", getFollowing);
