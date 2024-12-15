@@ -26,6 +26,10 @@ const getTuips = async (req, res) => {
       "SELECT tuips.id as tuipId, tuips.content as tuipContent, tuips.multimedia as tuipMultimedia, tuips.created_at as tuipCreatedAt, demons.id as demonId, demons.user_name as userName, demons.demon_name as demonName FROM tuips INNER JOIN demons ON tuips.demon_id = demons.id ORDER BY tuips.created_at DESC LIMIT ? OFFSET ?",
       [limit, (page - 1) * limit]
     );
+    for(const row of rows) {
+      const [total] = await pool.query("SELECT COUNT(*) as magrada FROM magrada where tuip_id = ?", [row.tuipId]);
+      row.magrada = total[0].magrada;
+    }
     res.json(rows);
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
