@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { getUser, getFollowers, getFollowing, authUser, createUser, updateUser, getUserData } from "../controllers/userController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
-import authMiddleware from "../middlewares/authMiddleware.js";
 
 const userRoutes = Router();
 
