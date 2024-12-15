@@ -6,8 +6,8 @@ const userRoutes = Router();
 
 userRoutes.get("/userData", authMiddleware, getUserData)
 userRoutes.get("/:username", getUser);
-userRoutes.get("/:id/followers", getFollowers);
-userRoutes.get("/:id/following", getFollowing);
+userRoutes.get("/:username/followers", getFollowers);
+userRoutes.get("/:username/following", getFollowing);
 userRoutes.post("/auth", authUser)
 userRoutes.post("/", createUser);
 userRoutes.patch("/", authMiddleware, updateUser);

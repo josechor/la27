@@ -89,8 +89,8 @@ const getUserData = async (req, res) => {
 const getFollowers = async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT d.demon_name, d.user_name FROM demons d JOIN followers f ON d.id = f.follower_id  WHERE f.followed_id = ?",
-      [req.params.id]
+      "SELECT d.demon_name, d.user_name FROM demons d JOIN followers f ON d.id = f.follower_id  WHERE f.followed_id = (SELECT id FROM demons WHERE user_name = ?)",
+      [req.params.username]
     );
     if (rows.length === 0) {
       return res.status(200).json({ message: "No followers found" });
@@ -105,8 +105,8 @@ const getFollowers = async (req, res) => {
 const getFollowing = async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT d.demon_name, d.user_name FROM demons d JOIN followers f ON d.id = f.followed_id  WHERE f.follower_id = ?",
-      [req.params.id]
+      "SELECT d.demon_name, d.user_name FROM demons d JOIN followers f ON d.id = f.followed_id  WHERE f.follower_id = (SELECT id FROM demons WHERE user_name = ?)",
+      [req.params.username]
     );
     if (rows.length === 0) {
       return res.status(200).json({ message: "No follows found" });
