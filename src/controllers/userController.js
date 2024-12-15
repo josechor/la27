@@ -179,11 +179,82 @@ const authUser = async (req, res) => {
   }
 };
 
+const updateUser = async (req, res) => {
+  try{
+    const { userName, demonName, email, profilePicture, banner, description, pinnedTuipId, birthday, password } = req.body;
+    let params = [];
+    let values = [];
+    if (userName !== undefined) {
+      params.push("user_name");
+      values.push(userName);
+    }
+    if (demonName !== undefined) {
+      params.push("demon_name");
+      values.push(demonName);
+    }
+    if (email !== undefined) {
+      params.push("email");
+      values.push(email);
+    }
+    if (profilePicture !== undefined) {
+      params.push("profile_picture");
+      values.push(profilePicture);
+    }
+    if (banner !== undefined) {
+      params.push("banner");
+      values.push(banner);
+    }
+    if (description !== undefined) {
+      params.push("description");
+      values.push(description);
+    }
+    if (pinnedTuipId !== undefined) {
+      params.push("pinned_tuip_id");
+      values.push(pinnedTuipId);
+    }
+    if (birthday !== undefined) {
+      params.push("birthday");
+      values.push(birthday);
+    }
+    if (password !== undefined) {
+      params.push("password");
+      values.push(await hash(password, 10));
+    }
+
+    if(params.length == 0){
+      return res.status(200).json({message: "Update completed"});
+    }
+
+    const userData = req.userData;
+
+    function crearUpdateString(params, values) {
+      let result = [];
+    
+      for (let i = 0; i < params.length; i++) {
+        result.push(`${params[i]} = '${values[i]}'`);
+      }
+    
+      return result.join(', ');
+    }
+    const data = crearUpdateString(params, values);
+
+    const query =
+      "UPDATE demons SET " + data + " WHERE id = ?";
+
+    await pool.query(query, [userData.id]);
+
+    res.status(200).json({ message: "User updated successfully" });    
+  }catch (error) {
+    res.status(500).json({ message: "Internal server error: ", error });
+  }
+}
+
 export {
   getUser,
   getFollowers,
   getFollowing,
   createUser,
-  authUser,
+  authUser, 
+  updateUser,
   getUserData,
 };
