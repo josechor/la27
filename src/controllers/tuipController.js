@@ -22,22 +22,46 @@ const getTuips = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 20;
     const page = parseInt(req.query.page, 10) || 1;
 
-    const [rows] = await pool.query(
-      "SELECT tuips.id as tuipId, tuips.content as tuipContent, tuips.multimedia as tuipMultimedia, tuips.created_at as tuipCreatedAt, demons.id as demonId, demons.user_name as userName, demons.demon_name as demonName FROM tuips INNER JOIN demons ON tuips.demon_id = demons.id ORDER BY tuips.created_at DESC LIMIT ? OFFSET ?",
-      [limit, (page - 1) * limit]
-    );
-    for (const row of rows) {
-      const [total] = await pool.query(
-        "SELECT COUNT(*) as magrada FROM magrada where tuip_id = ?",
-        [row.tuipId]
-      );
-      const [didYouLiked] = await pool.query(
-        "SELECT * FROM magrada WHERE tuip_id = ? AND demon_id = ?",
-        [rows.tuipId, req.userData.id]
-      );
-      row.magrada = total[0].magrada;
-      row.youLiked = didYouLiked.length > 0;
+    const authorId = req.query.authorId || null;
+    const likedById = req.query.likedById || null;
+
+    let query = `
+      SELECT 
+        tuips.id as tuipId, 
+        tuips.content as tuipContent, 
+        tuips.multimedia as tuipMultimedia, 
+        tuips.created_at as tuipCreatedAt, 
+        demons.id as demonId, 
+        demons.user_name as userName, 
+        demons.demon_name as demonName,
+        COUNT(magrada.demon_id) as magradaCount,
+        MAX(CASE WHEN magrada.demon_id = ? THEN 1 ELSE 0 END) as youLiked
+      FROM tuips
+      INNER JOIN demons ON tuips.demon_id = demons.id
+      LEFT JOIN magrada ON tuips.id = magrada.tuip_id
+    `;
+
+    let params = [req.userData.id];
+
+    if (authorId) {
+      query += " WHERE tuips.demon_id = ?";
+      params.push(authorId);
     }
+
+    if (likedById) {
+      query += (authorId ? " AND" : " WHERE") + " magrada.demon_id = ?";
+      params.push(likedById);
+    }
+
+    query += `
+      GROUP BY tuips.id, demons.id
+      ORDER BY tuips.created_at DESC
+      LIMIT ? OFFSET ?
+    `;
+
+    params.push(limit, (page - 1) * limit);
+    const [rows] = await pool.query(query, params);
+
     res.json(rows);
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
