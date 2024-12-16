@@ -2,22 +2,28 @@ import { pool } from "../config/database.js";
 
 const getTuip = async (req, res) => {
   try {
+    console.log(req.userData.id)
+
     const [rows] = await pool.query(
       `SELECT 
-        t.id,
-        t.content, 
-        t.demon_id as demonId, 
-        t.multimedia,
-        t.parent,
-        t.quoting,
-        t.secta, 
-        t.created_at as createdAt, 
+        t.id as tuipId, 
+        t.content as tuipContent, 
+        t.multimedia as tuipMultimedia,
+        t.parent as parent,
+        t.quoting as quoting,
+        t.secta as secta, 
+        t.created_at as tuipCreatedAt, 
+        d.id as demonId, 
+        d.user_name as userName, 
         d.demon_name as demonName,
-        d.user_name as userName
-        FROM tuips t 
-        JOIN demons d ON t.demon_id = d.id
-        WHERE t.id = ?`,
-      [req.params.id]
+        d.profile_picture as profilePicture,
+        COUNT(m.demon_id) as magradaCount,
+        MAX(CASE WHEN m.demon_id = ? THEN 1 ELSE 0 END) as youLiked
+      FROM tuips t 
+      INNER JOIN demons d ON t.demon_id = d.id
+      LEFT JOIN magrada m ON t.id = m.tuip_id
+      WHERE t.id = ?`,
+      [req.userData.id, req.params.id]
     );
 
     if (rows.length === 0) {
@@ -50,6 +56,7 @@ const getTuips = async (req, res) => {
         demons.id as demonId, 
         demons.user_name as userName, 
         demons.demon_name as demonName,
+        demons.profile_picture as profilePicture,
         COUNT(magrada.demon_id) as magradaCount,
         MAX(CASE WHEN magrada.demon_id = ? THEN 1 ELSE 0 END) as youLiked
       FROM tuips
@@ -125,4 +132,28 @@ const createTuip = async (req, res) => {
   }
 };
 
-export { getTuip, createTuip, getTuips, setLike, removeLike };
+const getEndemoniados = async(req, res) => {
+  try{
+    const query = `
+    SELECT 
+      t.id,
+      t.content as tuipContent, 
+      t.multimedia as tuipMultimedia,
+      t.secta as secta, 
+      t.created_at as tuipCreatedAt,
+    FROM tuips t
+    WHERE t.created_at > CURRENT_DATETIME - INTERVAL 7 DAY
+    `
+    const [lastWeekTuips] = await pool.query(query);
+    for(tuip in lastWeekTuips){
+
+    }
+
+    res.json(lastWeekTuips);
+    
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error: ", error });
+  }
+}
+
+export { getTuip, createTuip, getTuips, setLike, removeLike, getEndemoniados };
