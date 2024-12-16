@@ -282,6 +282,30 @@ const unfollowUser = async (req, res) => {
   }
 }
 
+const searchUsers = async (req, res) =>{
+  try{
+    const searchQuery = req.query.query;
+    const limit = parseInt(req.query.limit, 10) || 20;
+    const page = parseInt(req.query.page, 10) || 1;  
+    const userData = req.userData;
+
+    const [rows] = await pool.query(`SELECT id, user_name as userName, demon_name as demonName, description, profile_picture as profilePicture FROM demons WHERE user_name LIKE '%${searchQuery}%' ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      [limit, (page - 1) * limit]
+    );
+    for (const row of rows) {
+      const [followed] = await pool.query("SELECT COUNT(*) as count FROM followers WHERE follower_id = ? AND followed_id = ?;", [userData.id, row.id])
+      row.followed = followed[0].count > 0 ? true : false;
+      const [following] = await pool.query("SELECT COUNT(*) as count FROM followers WHERE follower_id = ? AND followed_id = ?;", [row.id, userData.id])
+      row.following = following[0].count > 0 ? true : false;
+      const [commonFollows] = await pool.query("SELECT COUNT(*) as count FROM followers f1 JOIN followers f2 ON f1.followed_id = f2.follower_id WHERE f1.follower_id = ? AND f2.followed_id = ?;", [userData.id, row.id])
+      row.commonFollowers = commonFollows[0].count;
+    }
+    res.json(rows)
+  }catch(error){
+    res.status(500).json({ message: "Internal server error: ", error });
+  }
+}
+
 export {
   getUser,
   getFollowers,
@@ -292,4 +316,5 @@ export {
   getUserData,
   followUser,
   unfollowUser,
+  searchUsers,
 };

@@ -1,10 +1,11 @@
 import { Router } from "express";
-import { getUser, getFollowers, getFollowing, authUser, createUser, updateUser, getUserData, followUser, unfollowUser } from "../controllers/userController.js";
+import { getUser, getFollowers, getFollowing, authUser, createUser, updateUser, getUserData, followUser, unfollowUser, searchUsers } from "../controllers/userController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 
 const userRoutes = Router();
 
 userRoutes.get("/userData", authMiddleware, getUserData)
+userRoutes.get("/search", authMiddleware, searchUsers);
 userRoutes.get("/:username", getUser);
 userRoutes.get("/:username/followers", getFollowers);
 userRoutes.get("/:username/following", getFollowing);
