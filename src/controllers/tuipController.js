@@ -3,7 +3,20 @@ import { pool } from "../config/database.js";
 const getTuip = async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT content, demon_id, multimedia, created_at FROM tuips WHERE id = ?",
+      `SELECT 
+        t.id,
+        t.content, 
+        t.demon_id as demonId, 
+        t.multimedia,
+        t.parent,
+        t.quoting,
+        t.secta, 
+        t.created_at as createdAt, 
+        d.demon_name as demonName,
+        d.user_name as userName
+        FROM tuips t 
+        JOIN demons d ON t.demon_id = d.id
+        WHERE t.id = ?`,
       [req.params.id]
     );
 
@@ -29,7 +42,10 @@ const getTuips = async (req, res) => {
       SELECT 
         tuips.id as tuipId, 
         tuips.content as tuipContent, 
-        tuips.multimedia as tuipMultimedia, 
+        tuips.multimedia as tuipMultimedia,
+        tuips.parent as parent,
+        tuips.quoting as quoting,
+        tuips.secta as secta, 
         tuips.created_at as tuipCreatedAt, 
         demons.id as demonId, 
         demons.user_name as userName, 
@@ -98,11 +114,11 @@ const removeLike = async (req, res) => {
 
 const createTuip = async (req, res) => {
   try {
-    const { content, multimedia } = req.body;
+    const { content, multimedia, parent, quoting, secta } = req.body;
     const userData = req.userData;
     const query =
-      "INSERT INTO tuips (demon_id, content, multimedia) VALUES (?, ?, ?)";
-    await pool.query(query, [userData.id, content, multimedia]);
+      "INSERT INTO tuips (demon_id, content, multimedia, parent, quoting, secta) VALUES (?, ?, ?, ?, ?, ?)";
+    await pool.query(query, [userData.id, content, multimedia, parent, quoting, secta]);
     res.status(201).json({ message: "Tuip created successfully" });
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
