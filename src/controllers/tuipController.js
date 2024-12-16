@@ -136,18 +136,47 @@ const getEndemoniados = async(req, res) => {
   try{
     const query = `
     SELECT 
-      t.id,
+      t.id as tuipId,
       t.content as tuipContent, 
       t.multimedia as tuipMultimedia,
       t.secta as secta, 
       t.created_at as tuipCreatedAt,
+      d.id as demonId,
+      d.demon_name as demonName,
+      d.user_name as userName,
+      d.profile_picture as profilePicture
     FROM tuips t
-    WHERE t.created_at > CURRENT_DATETIME - INTERVAL 7 DAY
+    INNER JOIN demons d
+    ON t.demon_id = d.id
+    WHERE t.created_at > CURRENT_TIMESTAMP - INTERVAL 7 DAY
     `
     const [lastWeekTuips] = await pool.query(query);
-    for(tuip in lastWeekTuips){
 
+    for(const tuip of lastWeekTuips){
+      const likesQuery = `SELECT COUNT(*) as likesCount FROM magrada WHERE tuip_id = ?`
+      const [likesCount] = await pool.query(likesQuery, [tuip.tuipId]);
+      tuip.likesCount = likesCount[0].likesCount;
+
+      const quotesQuery = `SELECT COUNT(*) as quotesCount FROM tuips WHERE quoting = ?`
+      const [quotesCount] = await pool.query(quotesQuery, [tuip.tuipId]);
+      tuip.quotesCount = quotesCount[0].quotesCount;
+
+      const responseQuery = `SELECT COUNT(*) as responseCount FROM tuips WHERE parent = ?`
+      const [responseCount] = await pool.query(responseQuery, [tuip.tuipId]);
+      tuip.responseCount = responseCount[0].responseCount;
+
+      tuip.interactions = tuip.likesCount + tuip.quotesCount + tuip.responseCount;
     }
+
+    lastWeekTuips.sort(function (a, b) {
+      if (a.interactions > b.interactions) {
+        return -1;
+      }
+      if (a.interactions < b.interactions) {
+        return 1;
+      }
+      return 0;
+    });
 
     res.json(lastWeekTuips);
     

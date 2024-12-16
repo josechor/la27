@@ -95,7 +95,6 @@ const getFollowers = async (req, res) => {
     if (rows.length === 0) {
       return res.status(200).json({ message: "No followers found" });
     }
-    console.log(rows);
     res.json(rows);
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
