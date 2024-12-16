@@ -289,7 +289,7 @@ const searchUsers = async (req, res) =>{
     const page = parseInt(req.query.page, 10) || 1;  
     const userData = req.userData;
 
-    const [rows] = await pool.query(`SELECT id, user_name as userName, demon_name as demonName, description, profile_picture as profilePicture FROM demons WHERE user_name LIKE '%${searchQuery}%' ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    const [rows] = await pool.query(`SELECT id, user_name as userName, demon_name as demonName, description, profile_picture as profilePicture FROM demons WHERE user_name LIKE '%${searchQuery}%' OR demon_name LIKE '%${searchQuery}%' ORDER BY created_at DESC LIMIT ? OFFSET ?`,
       [limit, (page - 1) * limit]
     );
     for (const row of rows) {
