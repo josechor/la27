@@ -29,6 +29,7 @@ services:
       DB_NAME: la27_db
     volumes:
       - .:/app  # Monta el código local en el contenedor
+      - ./uploads:/app/uploads  # Mapea la carpeta uploads del host al contenedor
     restart: always
     command: ["npm", "run", "dev"]  # Ejecuta el script de nodemon
 
