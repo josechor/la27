@@ -2,7 +2,7 @@ import { pool } from "../config/database.js";
 
 const getTuip = async (req, res) => {
   try {
-    console.log(req.userData.id)
+    console.log(req.userData.id);
 
     const [rows] = await pool.query(
       `SELECT 
@@ -101,11 +101,12 @@ const setLike = async (req, res) => {
     const demonId = req.userData.id;
     await pool.query("INSERT INTO likes (tuip_id, demon_id) VALUES (?, ?)", [
       tuipId,
-      demonId
+      demonId,
     ]);
-    await pool.query("UPDATE tuips SET likes_count = likes_count + 1 WHERE id = ?", [
-      tuipId
-    ])
+    await pool.query(
+      "UPDATE tuips SET likes_count = likes_count + 1 WHERE id = ?",
+      [tuipId]
+    );
     res.status(201).json({ message: "Tuip liked successfully" });
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
@@ -118,11 +119,12 @@ const removeLike = async (req, res) => {
     const demonId = req.userData.id;
     await pool.query("DELETE FROM likes WHERE tuip_id = ? AND demon_id = ?", [
       tuipId,
-      demonId
+      demonId,
     ]);
-    await pool.query("UPDATE tuips SET likes_count = likes_count - 1 WHERE id = ?", [
-      tuipId
-    ])
+    await pool.query(
+      "UPDATE tuips SET likes_count = likes_count - 1 WHERE id = ?",
+      [tuipId]
+    );
     res.status(200).json({ message: "Tuip unliked successfully" });
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
@@ -131,19 +133,33 @@ const removeLike = async (req, res) => {
 
 const createTuip = async (req, res) => {
   try {
-    const { content, multimedia, parent, quoting, secta } = req.body;
+    const { content, parent, quoting, secta } = req.body;
+    const parentParse = parent || null;
+    const quotingParse = quoting || null;
+    const sectaParse = secta || null;
+    const fileNames = req.files.map((file) => file.filename);
+    const fileNamesString = fileNames.join(",");
     const userData = req.userData;
+    console.log("Tuip ");
     const query =
       "INSERT INTO tuips (demon_id, content, multimedia, parent, quoting, secta) VALUES (?, ?, ?, ?, ?, ?)";
-    await pool.query(query, [userData.id, content, multimedia, parent, quoting, secta]);
+    await pool.query(query, [
+      userData.id,
+      content,
+      fileNamesString,
+      parentParse,
+      quotingParse,
+      sectaParse,
+    ]);
+    console.log("Tuip created successfully");
     res.status(201).json({ message: "Tuip created successfully" });
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
   }
 };
 
-const getEndemoniados = async(req, res) => {
-  try{
+const getEndemoniados = async (req, res) => {
+  try {
     const query = `
     SELECT 
       t.id as tuipId,
@@ -164,10 +180,10 @@ const getEndemoniados = async(req, res) => {
     ON t.demon_id = d.id
     WHERE t.created_at > CURRENT_TIMESTAMP - INTERVAL 7 DAY
     ORDER BY interactions DESC
-    `
+    `;
     const [lastWeekTuips] = await pool.query(query);
 
-   /* for(const tuip of lastWeekTuips){
+    /* for(const tuip of lastWeekTuips){
       const likesQuery = `SELECT COUNT(*) as likesCount FROM likes WHERE tuip_id = ?`
       const [likesCount] = await pool.query(likesQuery, [tuip.tuipId]);
       tuip.likesCount = likesCount[0].likesCount;
@@ -194,10 +210,9 @@ const getEndemoniados = async(req, res) => {
     });
 */
     res.json(lastWeekTuips);
-    
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
   }
-}
+};
 
 export { getTuip, createTuip, getTuips, setLike, removeLike, getEndemoniados };
