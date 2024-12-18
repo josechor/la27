@@ -12,16 +12,18 @@ const getTuip = async (req, res) => {
         t.parent as parent,
         t.quoting as quoting,
         t.secta as secta, 
+        t.responses_count as responsesCount,
+        t.quoting_count as quotingCount,
+        t.likes_count as likesCount,
         t.created_at as tuipCreatedAt, 
         d.id as demonId, 
         d.user_name as userName, 
         d.demon_name as demonName,
         d.profile_picture as profilePicture,
-        COUNT(m.demon_id) as magradaCount,
-        MAX(CASE WHEN m.demon_id = ? THEN 1 ELSE 0 END) as youLiked
+        MAX(CASE WHEN l.demon_id = ? THEN 1 ELSE 0 END) as youLiked
       FROM tuips t 
       INNER JOIN demons d ON t.demon_id = d.id
-      LEFT JOIN magrada m ON t.id = m.tuip_id
+      LEFT JOIN likes l ON t.id = l.tuip_id
       WHERE t.id = ?`,
       [req.userData.id, req.params.id]
     );
@@ -52,16 +54,18 @@ const getTuips = async (req, res) => {
         tuips.parent as parent,
         tuips.quoting as quoting,
         tuips.secta as secta, 
+        tuips.responses_count as responsesCount,
+        tuips.quoting_count as quotingCount,
+        tuips.likes_count as likesCount,
         tuips.created_at as tuipCreatedAt, 
         demons.id as demonId, 
         demons.user_name as userName, 
         demons.demon_name as demonName,
         demons.profile_picture as profilePicture,
-        COUNT(magrada.demon_id) as magradaCount,
-        MAX(CASE WHEN magrada.demon_id = ? THEN 1 ELSE 0 END) as youLiked
+        MAX(CASE WHEN likes.demon_id = ? THEN 1 ELSE 0 END) as youLiked
       FROM tuips
       INNER JOIN demons ON tuips.demon_id = demons.id
-      LEFT JOIN magrada ON tuips.id = magrada.tuip_id
+      LEFT JOIN likes ON tuips.id = likes.tuip_id
     `;
 
     let params = [req.userData.id];
@@ -72,7 +76,7 @@ const getTuips = async (req, res) => {
     }
 
     if (likedById) {
-      query += (authorId ? " AND" : " WHERE") + " magrada.demon_id = ?";
+      query += (authorId ? " AND" : " WHERE") + " likes.demon_id = ?";
       params.push(likedById);
     }
 
@@ -95,10 +99,13 @@ const setLike = async (req, res) => {
   try {
     const tuipId = req.params.id;
     const demonId = req.userData.id;
-    await pool.query("INSERT INTO magrada (tuip_id, demon_id) VALUES (?, ?)", [
+    await pool.query("INSERT INTO likes (tuip_id, demon_id) VALUES (?, ?)", [
       tuipId,
-      demonId,
+      demonId
     ]);
+    await pool.query("UPDATE tuips SET likes_count = likes_count + 1 WHERE id = ?", [
+      tuipId
+    ])
     res.status(201).json({ message: "Tuip liked successfully" });
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
@@ -109,10 +116,13 @@ const removeLike = async (req, res) => {
   try {
     const tuipId = req.params.id;
     const demonId = req.userData.id;
-    await pool.query("DELETE FROM magrada WHERE tuip_id = ? AND demon_id = ?", [
+    await pool.query("DELETE FROM likes WHERE tuip_id = ? AND demon_id = ?", [
       tuipId,
-      demonId,
+      demonId
     ]);
+    await pool.query("UPDATE tuips SET likes_count = likes_count - 1 WHERE id = ?", [
+      tuipId
+    ])
     res.status(200).json({ message: "Tuip unliked successfully" });
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
@@ -140,6 +150,10 @@ const getEndemoniados = async(req, res) => {
       t.content as tuipContent, 
       t.multimedia as tuipMultimedia,
       t.secta as secta, 
+      t.responses_count as responsesCount,
+      t.quoting_count as quotingCount,
+      t.likes_count as likesCount,
+      t.responses_count + t.quoting_count + t.likes_count as interactions,
       t.created_at as tuipCreatedAt,
       d.id as demonId,
       d.demon_name as demonName,
@@ -149,11 +163,12 @@ const getEndemoniados = async(req, res) => {
     INNER JOIN demons d
     ON t.demon_id = d.id
     WHERE t.created_at > CURRENT_TIMESTAMP - INTERVAL 7 DAY
+    ORDER BY interactions DESC
     `
     const [lastWeekTuips] = await pool.query(query);
 
-    for(const tuip of lastWeekTuips){
-      const likesQuery = `SELECT COUNT(*) as likesCount FROM magrada WHERE tuip_id = ?`
+   /* for(const tuip of lastWeekTuips){
+      const likesQuery = `SELECT COUNT(*) as likesCount FROM likes WHERE tuip_id = ?`
       const [likesCount] = await pool.query(likesQuery, [tuip.tuipId]);
       tuip.likesCount = likesCount[0].likesCount;
 
@@ -177,7 +192,7 @@ const getEndemoniados = async(req, res) => {
       }
       return 0;
     });
-
+*/
     res.json(lastWeekTuips);
     
   } catch (error) {

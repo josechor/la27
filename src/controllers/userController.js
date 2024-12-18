@@ -24,7 +24,7 @@ const getUser = async (req, res) => {
       [userdata[0].userId]
     );
     const [likesdata] = await pool.query(
-      "SELECT COUNT(*) as likesCount FROM magrada WHERE demon_id = ?",
+      "SELECT COUNT(*) as likesCount FROM likes WHERE demon_id = ?",
       [userdata[0].userId]
     );
 
@@ -70,7 +70,7 @@ const getUserData = async (req, res) => {
       [userdata[0].userId]
     );
     const [likesdata] = await pool.query(
-      "SELECT COUNT(*) as likesCount FROM magrada WHERE demon_id = ?",
+      "SELECT COUNT(*) as likesCount FROM likes WHERE demon_id = ?",
       [userdata[0].userId]
     );
 

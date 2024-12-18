@@ -14,7 +14,7 @@ const getGroup = async (req, res) => {
             updated_by as updatedBy,
             created_at as createdAt,
             updated_at as updatedAt
-            FROM secta
+            FROM sectas
             WHERE secta_id = ?`, [sectaId]);
         if(group.length == 0){
             res.status(404).json({ message: "Group not found" });
@@ -37,7 +37,7 @@ const getGroups = async (req, res) => {
             updated_by as updatedBy,
             created_at as createdAt,
             updated_at as updatedAt
-            FROM secta`);
+            FROM sectas`);
         
         res.json(groups);
 
@@ -50,7 +50,7 @@ const createGroup = async(req, res) => {
     try{
         const { sectaName, sectaDescription, sectaPicture, sectaBanner } = req.body;
         const userData = req.userData;
-        await pool.query(`INSERT INTO secta(secta_name, secta_description, secta_picture, secta_banner, creator_id, updated_by) VALUES (?, ?, ?, ?, ?, ?)`, [sectaName, sectaDescription, sectaPicture, sectaBanner, userData.id, userData.id]);
+        await pool.query(`INSERT INTO sectas(secta_name, secta_description, secta_picture, secta_banner, creator_id, updated_by) VALUES (?, ?, ?, ?, ?, ?)`, [sectaName, sectaDescription, sectaPicture, sectaBanner, userData.id, userData.id]);
         
         res.status(200).json({message: "Group created successfully"});
     } catch (error) {
@@ -102,7 +102,7 @@ const updateGroup = async(req, res) => {
     const data = crearUpdateString(params, values);
 
     const query =
-      "UPDATE secta SET " + data + " WHERE secta_id = ?";
+      "UPDATE sectas SET " + data + " WHERE secta_id = ?";
 
     await pool.query(query, [groupId]);
     
