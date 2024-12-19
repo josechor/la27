@@ -28,19 +28,18 @@ const getUser = async (req, res) => {
       [userdata[0].userId]
     );
 
-    console.log({
-      ...userdata[0],
-      ...followersdata[0],
-      ...followingdata[0],
-      ...tuipsdata[0],
-      ...likesdata[0],
-    });
+    const [areYouFollowing] = await pool.query(
+      "SELECT follower_id FROM followers where follower_id = ? and followed_id = ?",
+      [req.userData.id, userdata[0].userId]
+    );
+
     res.json({
       ...userdata[0],
       ...followersdata[0],
       ...followingdata[0],
       ...tuipsdata[0],
       ...likesdata[0],
+      followed: areYouFollowing.length > 0,
     });
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
@@ -179,8 +178,18 @@ const authUser = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-  try{
-    const { userName, demonName, email, profilePicture, banner, description, pinnedTuipId, birthday, password } = req.body;
+  try {
+    const {
+      userName,
+      demonName,
+      email,
+      profilePicture,
+      banner,
+      description,
+      pinnedTuipId,
+      birthday,
+      password,
+    } = req.body;
     let params = [];
     let values = [];
     if (userName !== undefined) {
@@ -220,97 +229,112 @@ const updateUser = async (req, res) => {
       values.push(await hash(password, 10));
     }
 
-    if(params.length == 0){
-      return res.status(200).json({message: "Update completed"});
+    if (params.length == 0) {
+      return res.status(200).json({ message: "Update completed" });
     }
 
     const userData = req.userData;
 
     function crearUpdateString(params, values) {
       let result = [];
-    
+
       for (let i = 0; i < params.length; i++) {
         result.push(`${params[i]} = '${values[i]}'`);
       }
-    
-      return result.join(', ');
+
+      return result.join(", ");
     }
     const data = crearUpdateString(params, values);
 
-    const query =
-      "UPDATE demons SET " + data + " WHERE id = ?";
+    const query = "UPDATE demons SET " + data + " WHERE id = ?";
 
     await pool.query(query, [userData.id]);
 
-    res.status(200).json({ message: "User updated successfully" });    
-  }catch (error) {
+    res.status(200).json({ message: "User updated successfully" });
+  } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
   }
-}
+};
 
 const followUser = async (req, res) => {
-  try{
-    const [followedid] = await pool.query("SELECT id FROM demons WHERE user_name = ?", [req.params.username]);
+  try {
+    const [followedid] = await pool.query(
+      "SELECT id FROM demons WHERE user_name = ?",
+      [req.params.username]
+    );
     const userData = req.userData;
-    if(followedid.length == 0){
-      return res.status(404).json({message: "User not found"});
+    if (followedid.length == 0) {
+      return res.status(404).json({ message: "User not found" });
     }
     const query =
       "INSERT INTO followers(follower_id, followed_id) VALUES (?, ?)";
 
     await pool.query(query, [userData.id, followedid[0].id]);
-    return res.status(200).json({message: "User followed successfully"});
-  }catch (error) {
+    return res.status(200).json({ message: "User followed successfully" });
+  } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
   }
-}
+};
 
 const unfollowUser = async (req, res) => {
-  try{
-    const [followedid] = await pool.query("SELECT id FROM demons WHERE user_name = ?", [req.params.username]);
+  try {
+    const [followedid] = await pool.query(
+      "SELECT id FROM demons WHERE user_name = ?",
+      [req.params.username]
+    );
     const userData = req.userData;
-    if(followedid.length == 0){
-      return res.status(404).json({message: "User not found"});
+    if (followedid.length == 0) {
+      return res.status(404).json({ message: "User not found" });
     }
-    const query = "DELETE FROM followers WHERE follower_id = ?  AND followed_id = ?";
+    const query =
+      "DELETE FROM followers WHERE follower_id = ?  AND followed_id = ?";
     await pool.query(query, [userData.id, followedid[0].id]);
-    return res.status(200).json({message: "User unfollowed successfully"});
-
-  }catch (error) {
+    return res.status(200).json({ message: "User unfollowed successfully" });
+  } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
   }
-}
+};
 
-const searchUsers = async (req, res) =>{
-  try{
+const searchUsers = async (req, res) => {
+  try {
     const searchQuery = req.query.query;
     const limit = parseInt(req.query.limit, 10) || 20;
-    const page = parseInt(req.query.page, 10) || 1;  
+    const page = parseInt(req.query.page, 10) || 1;
     const userData = req.userData;
 
-    const [rows] = await pool.query(`SELECT id, user_name as userName, demon_name as demonName, description, profile_picture as profilePicture FROM demons WHERE user_name LIKE '%${searchQuery}%' OR demon_name LIKE '%${searchQuery}%' ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    const [rows] = await pool.query(
+      `SELECT id, user_name as userName, demon_name as demonName, description, profile_picture as profilePicture FROM demons WHERE user_name LIKE '%${searchQuery}%' OR demon_name LIKE '%${searchQuery}%' ORDER BY created_at DESC LIMIT ? OFFSET ?`,
       [limit, (page - 1) * limit]
     );
     for (const row of rows) {
-      const [followed] = await pool.query("SELECT COUNT(*) as count FROM followers WHERE follower_id = ? AND followed_id = ?;", [userData.id, row.id])
+      const [followed] = await pool.query(
+        "SELECT COUNT(*) as count FROM followers WHERE follower_id = ? AND followed_id = ?;",
+        [userData.id, row.id]
+      );
       row.followed = followed[0].count > 0 ? true : false;
-      const [following] = await pool.query("SELECT COUNT(*) as count FROM followers WHERE follower_id = ? AND followed_id = ?;", [row.id, userData.id])
+      const [following] = await pool.query(
+        "SELECT COUNT(*) as count FROM followers WHERE follower_id = ? AND followed_id = ?;",
+        [row.id, userData.id]
+      );
       row.following = following[0].count > 0 ? true : false;
-      const [commonFollows] = await pool.query("SELECT COUNT(*) as count FROM followers f1 JOIN followers f2 ON f1.followed_id = f2.follower_id WHERE f1.follower_id = ? AND f2.followed_id = ?;", [userData.id, row.id])
+      const [commonFollows] = await pool.query(
+        "SELECT COUNT(*) as count FROM followers f1 JOIN followers f2 ON f1.followed_id = f2.follower_id WHERE f1.follower_id = ? AND f2.followed_id = ?;",
+        [userData.id, row.id]
+      );
       row.commonFollowers = commonFollows[0].count;
     }
-    res.json(rows)
-  }catch(error){
+    res.json(rows);
+  } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
   }
-}
+};
 
 export {
   getUser,
   getFollowers,
   getFollowing,
   createUser,
-  authUser, 
+  authUser,
   updateUser,
   getUserData,
   followUser,

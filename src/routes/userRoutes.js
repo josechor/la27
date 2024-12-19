@@ -6,7 +6,7 @@ const userRoutes = Router();
 
 userRoutes.get("/userData", authMiddleware, getUserData)
 userRoutes.get("/search", authMiddleware, searchUsers);
-userRoutes.get("/:username", getUser);
+userRoutes.get("/:username", authMiddleware, getUser);
 userRoutes.get("/:username/followers", getFollowers);
 userRoutes.get("/:username/following", getFollowing);
 userRoutes.post("/auth", authUser)
