@@ -45,6 +45,7 @@ const getTuips = async (req, res) => {
 
     const authorId = req.query.authorId || null;
     const likedById = req.query.likedById || null;
+    const sectaId = req.query.sectaId || null;
 
     let query = `
       SELECT 
@@ -78,6 +79,11 @@ const getTuips = async (req, res) => {
     if (likedById) {
       query += (authorId ? " AND" : " WHERE") + " likes.demon_id = ?";
       params.push(likedById);
+    }
+
+    if (sectaId) {
+      query += (authorId || likedById ? " AND" : " WHERE") + " tuips.secta = ?";
+      params.push(sectaId);
     }
 
     query += `
