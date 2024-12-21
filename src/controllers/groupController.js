@@ -48,9 +48,10 @@ const getGroups = async (req, res) => {
 
 const createGroup = async(req, res) => {
     try{
-        const { sectaName, sectaDescription, sectaPicture, sectaBanner } = req.body;
+        const { sectaName, sectaDescription, sectaBanner } = req.body;
+        const sectaPictureParse = req.files[0].filename || null;
         const userData = req.userData;
-        await pool.query(`INSERT INTO sectas(secta_name, secta_description, secta_picture, secta_banner, creator_id, updated_by) VALUES (?, ?, ?, ?, ?, ?)`, [sectaName, sectaDescription, sectaPicture, sectaBanner, userData.id, userData.id]);
+        await pool.query(`INSERT INTO sectas(secta_name, secta_description, secta_picture, secta_banner, creator_id, updated_by) VALUES (?, ?, ?, ?, ?, ?)`, [sectaName, sectaDescription, sectaPictureParse, sectaBanner, userData.id, userData.id]);
         
         res.status(200).json({message: "Group created successfully"});
     } catch (error) {
