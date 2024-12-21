@@ -329,6 +329,19 @@ const searchUsers = async (req, res) => {
   }
 };
 
+const getSectasFollowed = async (req, res) => {
+  try {
+    const userData = req.userData;
+    const [rows] = await pool.query(
+      `SELECT secta.secta_id as sectaId, secta.secta_name as sectaName FROM sectas as secta JOIN secta_follower as sf ON secta.secta_id = sf.secta_id WHERE sf.follower_id = ?`,
+      [userData.id]
+    );
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error: ", error });
+  }
+};
+
 export {
   getUser,
   getFollowers,
@@ -340,4 +353,5 @@ export {
   followUser,
   unfollowUser,
   searchUsers,
+  getSectasFollowed,
 };
