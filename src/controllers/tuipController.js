@@ -147,6 +147,14 @@ const createTuip = async (req, res) => {
     const fileNamesString = fileNames.join(",");
     const userData = req.userData;
     console.log("Tuip ");
+    console.log([
+      userData.id,
+      content,
+      fileNamesString,
+      parentParse,
+      quotingParse,
+      sectaParse,
+    ]);
     const query =
       "INSERT INTO tuips (demon_id, content, multimedia, parent, quoting, secta) VALUES (?, ?, ?, ?, ?, ?)";
     await pool.query(query, [
