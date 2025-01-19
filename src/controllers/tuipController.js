@@ -2,8 +2,6 @@ import { pool } from "../config/database.js";
 
 const getTuip = async (req, res) => {
   try {
-    console.log(req.userData.id);
-
     const [rows] = await pool.query(
       `SELECT 
         t.id as tuipId, 
@@ -31,7 +29,6 @@ const getTuip = async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({ message: "Tuip not found" });
     }
-    console.log(rows[0]);
     res.json(rows[0]);
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
