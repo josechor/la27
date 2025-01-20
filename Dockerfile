@@ -4,6 +4,8 @@ FROM node:20
 # Define el directorio de trabajo
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y ffmpeg
+
 # Copia los archivos del proyecto
 COPY package*.json ./
 

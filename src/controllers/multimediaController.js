@@ -30,6 +30,7 @@ const upload = async (req, res) => {
       });
     }
     let processedFilePath;
+    console.log(fileType);
     if (fileType === "image") {
       processedFilePath = `uploads/${path.basename(
         file.path,
@@ -37,6 +38,7 @@ const upload = async (req, res) => {
       )}.webp`;
       await sharp(filePath).webp({ quality: 80 }).toFile(processedFilePath);
     } else if (fileType === "video") {
+      console.log("video");
       processedFilePath = `uploads/${path.basename(
         file.path,
         fileExtension
@@ -65,13 +67,27 @@ const upload = async (req, res) => {
 };
 
 function compressVideo(inputPath, outputPath) {
+  const start = Date.now();
+  console.log("dentro");
   return new Promise((resolve, reject) => {
     ffmpeg(inputPath)
       .output(outputPath)
-      .videoCodec("libx264") // Códec eficiente
-      .size("1280x720") // Resolución fija (opcional)
-      .outputOptions("-crf 20") // Nivel de compresión (menor = más calidad)
-      .on("end", () => resolve(outputPath))
+      .videoCodec("libx264") // Códec más compatible
+      .audioCodec("aac") // Códec de audio común
+      .outputOptions("-crf 23") // Calidad de compresión (23 es un buen equilibrio)
+      .outputOptions("-preset fast") // Compresión rápida (en lugar de ultrafast)
+      .outputOptions("-threads 8") // Usar 8 hilos
+      .outputOptions("-bufsize 4M") // Ajustar buffer
+      .on("start", () => {
+        console.log("Processing started");
+      })
+      .on("progress", (progress) => {
+        console.log(`Processing: ${progress.percent}%`);
+      })
+      .on("end", () => {
+        console.log(`Processing finished in ${(Date.now() - start) / 1000}ms`);
+        resolve(outputPath);
+      })
       .on("error", (err) => reject(err))
       .run();
   });
