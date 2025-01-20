@@ -5,6 +5,7 @@ import { groupRoutes } from "./routes/groupRoutes.js";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import { multimediaRoutes } from "./routes/multimedia.js";
 
 const app = express();
 
@@ -18,5 +19,7 @@ app.use('/multimedia', express.static(path.join(__dirname, '../uploads')));
 app.use("/api/users", userRoutes);
 app.use("/api/tuips", tuipRoutes);
 app.use("/api/groups", groupRoutes);
+app.use("/api/multimedia", multimediaRoutes)
+
 
 export { app };
