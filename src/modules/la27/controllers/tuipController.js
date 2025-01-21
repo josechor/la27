@@ -10,6 +10,7 @@ const getTuip = async (req, res) => {
         t.parent as parent,
         t.quoting as quoting,
         t.secta as secta, 
+        t.multimedia as tuipM,
         t.responses_count as responsesCount,
         t.quoting_count as quotingCount,
         t.likes_count as likesCount,
@@ -35,9 +36,11 @@ const getTuip = async (req, res) => {
     }
     if (rows[0].tuipMultimedia) {
       rows[0].tuipMultimedia = rows[0].tuipMultimedia.split(",");
-    } else {
-      rows[0].tuipMultimedia = [];
     }
+
+    const tm = rows[0].tuipM.split(",");
+    rows[0].tuipMultimedia.push(...tm);
+    delete rows[0].tuipM;
     res.json(rows[0]);
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
@@ -59,6 +62,7 @@ const getTuips = async (req, res) => {
         tuips.content as tuipContent, 
         tuips.parent as parent,
         tuips.quoting as quoting,
+        tuips.multimedia as tuipM,
         tuips.secta as secta, 
         tuips.responses_count as responsesCount,
         tuips.quoting_count as quotingCount,
@@ -104,12 +108,16 @@ const getTuips = async (req, res) => {
 
     const [rows] = await pool.query(query, params);
 
-    res.json(
-      rows.map((row) => ({
-        ...row,
-        tuipMultimedia: row.tuipMultimedia ? row.tuipMultimedia.split(",") : [],
-      }))
-    );
+    const parseRows = rows.map((row) => ({
+      ...row,
+      tuipMultimedia: row.tuipMultimedia ? row.tuipMultimedia.split(",") : [],
+    }));
+    parseRows.forEach((element) => {
+      const tm = element.tuipM.split(",");
+      element.tuipMultimedia.push(...tm);
+      delete element.tuipM;
+    });
+    res.json(parseRows);
   } catch (error) {
     res.status(500).json({ message: "Internal server error", error });
   }
