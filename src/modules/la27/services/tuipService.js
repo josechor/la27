@@ -16,9 +16,7 @@ export const createTuipService = async ({
   const connection = await getConnection();
 
   try {
-    console.log("0");
     await connection.beginTransaction();
-    console.log("1");
 
     const tuipId = await insertTuip(connection, {
       demonId,
@@ -27,12 +25,9 @@ export const createTuipService = async ({
       quoting,
       secta,
     });
-    console.log("2");
 
     for (const file of files) {
-      console.log(file);
       const mediaData = await processFile(file);
-      console.log(mediaData.media.id);
       await insertTuipMedia(connection, tuipId, mediaData.media.id);
     }
 

@@ -6,6 +6,7 @@ import {
   findMediaByChecksum,
   saveMediaToDatabase,
 } from "../models/mediaModel.js";
+import ffmpeg from "fluent-ffmpeg";
 
 function generateChecksum(filePath) {
   return crypto
@@ -21,6 +22,30 @@ async function processImage(filePath, fileExtension) {
   )}.webp`;
   await sharp(filePath).webp({ quality: 80 }).toFile(processedFilePath);
   return processedFilePath;
+}
+
+async function processVideo(filePath, fileExtension) {
+  const processedFilePath = `uploads/${path.basename(
+    filePath,
+    fileExtension
+  )}.mp4`;
+
+  return new Promise((resolve, reject) => {
+    ffmpeg(filePath)
+      .output(processedFilePath)
+      .videoCodec("copy")
+      .audioCodec("copy")
+      .on("progress", (progress) => {
+        console.log(`Processing: ${progress.percent}% done`);
+      })
+      .on("end", () => {
+        resolve(processedFilePath);
+      })
+      .on("error", (err) => {
+        reject(err);
+      })
+      .run();
+  });
 }
 
 async function processFile(file) {
@@ -40,7 +65,7 @@ async function processFile(file) {
   if (fileType === "image") {
     processedFilePath = await processImage(filePath, fileExtension);
   } else if (fileType === "video") {
-    processedFilePath = filePath;
+    processedFilePath = await processVideo(filePath, fileExtension);
   } else {
     throw new Error("Invalid file type");
   }
@@ -52,9 +77,7 @@ async function processFile(file) {
     checksum,
   });
 
-  if (fileType === "image") {
-    fs.unlinkSync(filePath);
-  }
+  fs.unlinkSync(filePath);
 
   return { alreadyExists: false, media: mediaData };
 }
