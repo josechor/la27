@@ -38,7 +38,7 @@ const getTuip = async (req, res) => {
       rows[0].tuipMultimedia = rows[0].tuipMultimedia.split(",");
     }
 
-    const tm = rows[0].tuipM.split(",");
+    const tm = tm !== null ? rows[0].tuipM.split(",") : [];
     rows[0].tuipMultimedia.push(...tm);
     delete rows[0].tuipM;
     res.json(rows[0]);
@@ -113,8 +113,10 @@ const getTuips = async (req, res) => {
       tuipMultimedia: row.tuipMultimedia ? row.tuipMultimedia.split(",") : [],
     }));
     parseRows.forEach((element) => {
-      const tm = element.tuipM.split(",");
-      element.tuipMultimedia.push(...tm);
+      if (element.tuipM !== null) {
+        const tm = element.tuipM.split(",");
+        element.tuipMultimedia.push(...tm);
+      }
       delete element.tuipM;
     });
     res.json(parseRows);
