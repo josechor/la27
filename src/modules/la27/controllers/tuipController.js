@@ -38,7 +38,7 @@ const getTuip = async (req, res) => {
       rows[0].tuipMultimedia = rows[0].tuipMultimedia.split(",");
     }
 
-    const tm = tm !== null ? rows[0].tuipM.split(",") : [];
+    const tm = rows[0].tuipM !== null ? rows[0].tuipM.split(",") : [];
     rows[0].tuipMultimedia.push(...tm);
     delete rows[0].tuipM;
     res.json(rows[0]);
