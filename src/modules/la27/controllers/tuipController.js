@@ -33,6 +33,7 @@ const getTuip = async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({ message: "Tuip not found" });
     }
+    console.log(rows[0].tuipMultimedia);
     rows[0].tuipMultimedia = rows[0].tuipMultimedia.split(",");
     res.json(rows[0]);
   } catch (error) {
