@@ -33,8 +33,11 @@ const getTuip = async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({ message: "Tuip not found" });
     }
-    console.log(rows[0].tuipMultimedia);
-    rows[0].tuipMultimedia = rows[0].tuipMultimedia.split(",");
+    if (rows[0].tuipMultimedia) {
+      rows[0].tuipMultimedia = rows[0].tuipMultimedia.split(",");
+    } else {
+      rows[0].tuipMultimedia = [];
+    }
     res.json(rows[0]);
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
@@ -104,9 +107,7 @@ const getTuips = async (req, res) => {
     res.json(
       rows.map((row) => ({
         ...row,
-        tuipMultimedia: row.tuipMultimedia
-          ? row.tuipMultimedia.split(",")
-          : [],
+        tuipMultimedia: row.tuipMultimedia ? row.tuipMultimedia.split(",") : [],
       }))
     );
   } catch (error) {
