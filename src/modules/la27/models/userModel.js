@@ -66,3 +66,17 @@ export const getFollowingModel = async (useName) => {
   );
   return rows;
 };
+
+export const updateProfilePictureModel = async (
+  connection,
+  userId,
+  profilePicture
+) => {
+  const query = "UPDATE demons SET profile_picture = ? WHERE id = ?";
+  await connection.query(query, [profilePicture, userId]);
+};
+
+export const updateBannerModel = async (connection, userId, banner) => {
+  const query = "UPDATE demons SET banner = ? WHERE id = ?";
+  await connection.query(query, [banner, userId]);
+};

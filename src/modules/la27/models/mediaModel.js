@@ -3,7 +3,16 @@ import { pool } from "../../../config/database.js";
 async function findMediaByChecksum(checksum) {
   const query = "SELECT * FROM media WHERE checksum = ? LIMIT 1";
   const [rows] = await pool.query(query, [checksum]);
-  return rows.length ? rows[0] : null;
+  if (rows.length) {
+    return {
+      id: rows[0].id,
+      filename: rows[0].file_name,
+      fileType: rows[0].file_type,
+      fileSize: rows[0].file_size,
+      checksum: rows[0].checksum,
+    };
+  }
+  return null;
 }
 
 async function saveMediaToDatabase({ filename, fileType, fileSize, checksum }) {

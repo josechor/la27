@@ -1,6 +1,10 @@
 import { pool } from "../../../config/database.js";
 import { compare, hash } from "bcrypt";
-import { getUserData } from "../services/userService.js";
+import {
+  getUserData,
+  updateBannerService,
+  updateProfilePictureService,
+} from "../services/userService.js";
 import { getFollowersModel, getFollowingModel } from "../models/userModel.js";
 
 const getUser = async (req, res) => {
@@ -143,7 +147,6 @@ const updateUser = async (req, res) => {
       userName,
       demonName,
       email,
-      profilePicture,
       banner,
       description,
       pinnedTuipId,
@@ -163,14 +166,6 @@ const updateUser = async (req, res) => {
     if (email !== undefined) {
       params.push("email");
       values.push(email);
-    }
-    if (profilePicture !== undefined) {
-      params.push("profile_picture");
-      values.push(profilePicture);
-    }
-    if (banner !== undefined) {
-      params.push("banner");
-      values.push(banner);
     }
     if (description !== undefined) {
       params.push("description");
@@ -211,6 +206,36 @@ const updateUser = async (req, res) => {
     await pool.query(query, [userData.id]);
 
     res.status(200).json({ message: "User updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error: ", error });
+  }
+};
+
+const updateProfilePicture = async (req, res) => {
+  try {
+    const profilePicture = req.file;
+    const userData = req.userData;
+
+    await updateProfilePictureService({
+      userId: userData.id,
+      profilePicture,
+    });
+    res.status(200).json({ message: "Profile picture updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error: ", error });
+  }
+};
+
+const updateBanner = async (req, res) => {
+  try {
+    const banner = req.file;
+    const userData = req.userData;
+    console.log(banner);
+    await updateBannerService({
+      userId: userData.id,
+      banner,
+    });
+    res.status(200).json({ message: "Profile picture updated successfully" });
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
   }
@@ -314,4 +339,6 @@ export {
   unfollowUser,
   searchUsers,
   getSectasFollowed,
+  updateProfilePicture,
+  updateBanner,
 };
