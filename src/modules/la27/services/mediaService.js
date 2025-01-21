@@ -53,7 +53,6 @@ async function processFile(file) {
   });
 
   if (fileType === "image") {
-    console.log("dentro");
     fs.unlinkSync(filePath);
   }
 

@@ -14,6 +14,7 @@ const __dirname = path.dirname(__filename);
 
 app.use(json());
 app.use(cors({ origin: "*" }));
+app.use(express.urlencoded({ extended: true }));
 
 app.use('/multimedia', express.static(path.join(__dirname, '../uploads')));
 app.use("/api/users", userRoutes);

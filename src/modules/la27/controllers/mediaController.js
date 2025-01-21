@@ -5,6 +5,8 @@ const upload = async (req, res) => {
   if (!file) {
     return res.status(400).json({ message: "No file provided" });
   }
+  console.log(file);
+  return;
 
   try {
     const { alreadyExists, media } = await processFile(file);

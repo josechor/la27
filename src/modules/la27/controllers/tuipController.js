@@ -1,4 +1,5 @@
 import { pool } from "../../../config/database.js";
+import { createTuipService } from "../services/tuipService.js";
 
 const getTuip = async (req, res) => {
   try {
@@ -6,7 +7,6 @@ const getTuip = async (req, res) => {
       `SELECT 
         t.id as tuipId, 
         t.content as tuipContent, 
-        t.multimedia as tuipMultimedia,
         t.parent as parent,
         t.quoting as quoting,
         t.secta as secta, 
@@ -18,17 +18,22 @@ const getTuip = async (req, res) => {
         d.user_name as userName, 
         d.demon_name as demonName,
         d.profile_picture as profilePicture,
-        MAX(CASE WHEN l.demon_id = ? THEN 1 ELSE 0 END) as youLiked
+        MAX(CASE WHEN l.demon_id = ? THEN 1 ELSE 0 END) as youLiked,
+        GROUP_CONCAT(m.file_name) as tuipMultimedia
       FROM tuips t 
       INNER JOIN demons d ON t.demon_id = d.id
       LEFT JOIN likes l ON t.id = l.tuip_id
-      WHERE t.id = ?`,
+      LEFT JOIN tuip_media tm ON t.id = tm.tuip_id
+      LEFT JOIN media m ON tm.media_id = m.id
+      WHERE t.id = ?
+      GROUP BY t.id`,
       [req.userData.id, req.params.id]
     );
 
     if (rows.length === 0) {
       return res.status(404).json({ message: "Tuip not found" });
     }
+    rows[0].tuipMultimedia = rows[0].tuipMultimedia.split(",");
     res.json(rows[0]);
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
@@ -48,7 +53,6 @@ const getTuips = async (req, res) => {
       SELECT 
         tuips.id as tuipId, 
         tuips.content as tuipContent, 
-        tuips.multimedia as tuipMultimedia,
         tuips.parent as parent,
         tuips.quoting as quoting,
         tuips.secta as secta, 
@@ -60,10 +64,13 @@ const getTuips = async (req, res) => {
         demons.user_name as userName, 
         demons.demon_name as demonName,
         demons.profile_picture as profilePicture,
-        MAX(CASE WHEN likes.demon_id = ? THEN 1 ELSE 0 END) as youLiked
+        MAX(CASE WHEN likes.demon_id = ? THEN 1 ELSE 0 END) as youLiked,
+        GROUP_CONCAT(media.file_name) as tuipMultimedia
       FROM tuips
       INNER JOIN demons ON tuips.demon_id = demons.id
       LEFT JOIN likes ON tuips.id = likes.tuip_id
+      LEFT JOIN tuip_media ON tuips.id = tuip_media.tuip_id
+      LEFT JOIN media ON tuip_media.media_id = media.id
     `;
 
     let params = [req.userData.id];
@@ -90,11 +97,19 @@ const getTuips = async (req, res) => {
     `;
 
     params.push(limit, (page - 1) * limit);
+
     const [rows] = await pool.query(query, params);
 
-    res.json(rows);
+    res.json(
+      rows.map((row) => ({
+        ...row,
+        tuipMultimedia: row.tuipMultimedia
+          ? row.tuipMultimedia.split(",")
+          : [],
+      }))
+    );
   } catch (error) {
-    res.status(500).json({ message: "Internal server error: ", error });
+    res.status(500).json({ message: "Internal server error", error });
   }
 };
 
@@ -137,33 +152,21 @@ const removeLike = async (req, res) => {
 const createTuip = async (req, res) => {
   try {
     const { content, parent, quoting, secta } = req.body;
-    const parentParse = parent || null;
-    const quotingParse = quoting || null;
-    const sectaParse = secta || null;
-    const fileNames = req.files.map((file) => file.filename);
-    const fileNamesString = fileNames.join(",");
     const userData = req.userData;
-    console.log("Tuip ");
-    console.log([
-      userData.id,
+    const files = req.files || [];
+
+    const tuip = await createTuipService({
+      demonId: userData.id,
       content,
-      fileNamesString,
-      parentParse,
-      quotingParse,
-      sectaParse,
-    ]);
-    const query =
-      "INSERT INTO tuips (demon_id, content, multimedia, parent, quoting, secta) VALUES (?, ?, ?, ?, ?, ?)";
-    await pool.query(query, [
-      userData.id,
-      content,
-      fileNamesString,
-      parentParse,
-      quotingParse,
-      sectaParse,
-    ]);
-    console.log("Tuip created successfully");
-    res.status(201).json({ message: "Tuip created successfully" });
+      parent: parent || null,
+      quoting: quoting || null,
+      secta: secta || null,
+      files,
+    });
+
+    res
+      .status(201)
+      .json({ message: "Tuip created successfully", tuipId: tuip.id });
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
   }
