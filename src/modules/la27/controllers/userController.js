@@ -1,52 +1,24 @@
-import { pool } from "../config/database.js";
+import { pool } from "../../../config/database.js";
 import { compare, hash } from "bcrypt";
+import { getUserData } from "../services/userService.js";
+import { getFollowersModel, getFollowingModel } from "../models/userModel.js";
 
 const getUser = async (req, res) => {
   try {
-    const [userdata] = await pool.query(
-      "SELECT id as userId, user_name as userName, demon_name as demonName, email, " +
-        "profile_picture as profilePicture, banner, description, pinned_tuip_id as pinnedTuipId, created_at as createdAt, birthday FROM demons WHERE user_name = ?",
-      [req.params.username]
-    );
-    if (userdata.length === 0) {
+    const userName = req.params.username;
+    const userId = req.userData.id;
+    const userData = await getUserData(userName, userId);
+
+    res.status(200).json(userData);
+  } catch (error) {
+    if (error.message === "User not found") {
       return res.status(404).json({ message: "User not found" });
     }
-    const [followersdata] = await pool.query(
-      "SELECT COUNT(*) as followers FROM followers WHERE followed_id = ?",
-      [userdata[0].userId]
-    );
-    const [followingdata] = await pool.query(
-      "SELECT COUNT(*) as following FROM followers WHERE follower_id = ?",
-      [userdata[0].userId]
-    );
-    const [tuipsdata] = await pool.query(
-      "SELECT COUNT(*) as tuipsCount FROM tuips WHERE demon_id = ?",
-      [userdata[0].userId]
-    );
-    const [likesdata] = await pool.query(
-      "SELECT COUNT(*) as likesCount FROM likes WHERE demon_id = ?",
-      [userdata[0].userId]
-    );
-
-    const [areYouFollowing] = await pool.query(
-      "SELECT follower_id FROM followers where follower_id = ? and followed_id = ?",
-      [req.userData.id, userdata[0].userId]
-    );
-
-    res.json({
-      ...userdata[0],
-      ...followersdata[0],
-      ...followingdata[0],
-      ...tuipsdata[0],
-      ...likesdata[0],
-      followed: areYouFollowing.length > 0,
-    });
-  } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
   }
 };
 
-const getUserData = async (req, res) => {
+const getSelfData = async (req, res) => {
   try {
     const [userdata] = await pool.query(
       "SELECT id as userId, user_name as userName, demon_name as demonName, email, " +
@@ -87,14 +59,8 @@ const getUserData = async (req, res) => {
 
 const getFollowers = async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      "SELECT d.demon_name, d.user_name FROM demons d JOIN followers f ON d.id = f.follower_id  WHERE f.followed_id = (SELECT id FROM demons WHERE user_name = ?)",
-      [req.params.username]
-    );
-    if (rows.length === 0) {
-      return res.status(200).json({ message: "No followers found" });
-    }
-    res.json(rows);
+    const followers = getFollowersModel(req.params.username);
+    res.json(followers);
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
   }
@@ -102,14 +68,8 @@ const getFollowers = async (req, res) => {
 
 const getFollowing = async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      "SELECT d.demon_name, d.user_name FROM demons d JOIN followers f ON d.id = f.followed_id  WHERE f.follower_id = (SELECT id FROM demons WHERE user_name = ?)",
-      [req.params.username]
-    );
-    if (rows.length === 0) {
-      return res.status(200).json({ message: "No follows found" });
-    }
-    res.json(rows);
+    const following = getFollowingModel(req.params.username);
+    res.json(following);
   } catch (error) {
     res.status(500).json({ message: "Internal server error: ", error });
   }
@@ -349,7 +309,7 @@ export {
   createUser,
   authUser,
   updateUser,
-  getUserData,
+  getSelfData,
   followUser,
   unfollowUser,
   searchUsers,

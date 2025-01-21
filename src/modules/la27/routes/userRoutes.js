@@ -6,17 +6,17 @@ import {
   authUser,
   createUser,
   updateUser,
-  getUserData,
+  getSelfData,
   followUser,
   unfollowUser,
   searchUsers,
   getSectasFollowed,
 } from "../controllers/userController.js";
-import authMiddleware from "../middlewares/authMiddleware.js";
+import authMiddleware from "../../../middlewares/authMiddleware.js";
 
 const userRoutes = Router();
 
-userRoutes.get("/userData", authMiddleware, getUserData);
+userRoutes.get("/userData", authMiddleware, getSelfData);
 userRoutes.get("/search", authMiddleware, searchUsers);
 userRoutes.get("/followedSectas", authMiddleware, getSectasFollowed);
 userRoutes.get("/:username", authMiddleware, getUser);

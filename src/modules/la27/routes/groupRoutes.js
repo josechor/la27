@@ -8,8 +8,8 @@ import {
   unfollowGroup,
   getGroupFollowers,
 } from "../controllers/groupController.js";
-import authMiddleware from "../middlewares/authMiddleware.js";
-import { upload } from "../middlewares/multerMiddleware.js";
+import authMiddleware from "../../../middlewares/authMiddleware.js";
+import { upload } from "../../../middlewares/multerMiddleware.js";
 
 const groupRoutes = Router();
 

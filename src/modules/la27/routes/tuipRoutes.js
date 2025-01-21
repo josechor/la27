@@ -7,8 +7,8 @@ import {
   removeLike,
   getEndemoniados,
 } from "../controllers/tuipController.js";
-import authMiddleware from "../middlewares/authMiddleware.js";
-import { upload } from "../middlewares/multerMiddleware.js";
+import authMiddleware from "../../../middlewares/authMiddleware.js";
+import { upload } from "../../../middlewares/multerMiddleware.js";
 
 
 const tuipRoutes = Router();

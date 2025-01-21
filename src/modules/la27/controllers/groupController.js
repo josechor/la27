@@ -1,4 +1,4 @@
-import { pool } from "../config/database.js";
+import { pool } from "../../../config/database.js";
 
 const getGroup = async (req, res) => {
   try {

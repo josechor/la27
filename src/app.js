@@ -1,11 +1,11 @@
 import express, { json } from "express";
-import { userRoutes } from "./routes/userRoutes.js";
-import { tuipRoutes } from "./routes/tuipRoutes.js";
-import { groupRoutes } from "./routes/groupRoutes.js";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import { multimediaRoutes } from "./routes/multimedia.js";
+import { userRoutes } from "./modules/la27/routes/userRoutes.js";
+import { tuipRoutes } from "./modules/la27/routes/tuipRoutes.js";
+import { groupRoutes } from "./modules/la27/routes/groupRoutes.js";
 
 const app = express();
 
