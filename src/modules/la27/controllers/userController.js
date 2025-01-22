@@ -1,6 +1,7 @@
 import { pool } from "../../../config/database.js";
 import { compare, hash } from "bcrypt";
 import {
+  getAllUsersPreviewService,
   getUserData,
   updateBannerService,
   updateProfilePictureService,
@@ -327,6 +328,16 @@ const getSectasFollowed = async (req, res) => {
   }
 };
 
+const getAllUsers = async (req, res) => {
+  try {
+    const getAllUsersPreview = await getAllUsersPreviewService(req.userData.id);
+
+    res.status(200).json(getAllUsersPreview);
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error: ", error });
+  }
+};
+
 export {
   getUser,
   getFollowers,
@@ -341,4 +352,5 @@ export {
   getSectasFollowed,
   updateProfilePicture,
   updateBanner,
+  getAllUsers,
 };

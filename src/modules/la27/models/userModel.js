@@ -80,3 +80,26 @@ export const updateBannerModel = async (connection, userId, banner) => {
   const query = "UPDATE demons SET banner = ? WHERE id = ?";
   await connection.query(query, [banner, userId]);
 };
+
+export const getAllUsersPreviewModel = async (userId) => {
+  const query = `
+    SELECT 
+      d.demon_name AS demonName, 
+      d.user_name AS userName, 
+      d.profile_picture AS profilePicture, 
+      d.description AS description, 
+      CASE 
+          WHEN f.follower_id IS NOT NULL THEN 1 
+          ELSE 0 
+      END AS isFollowing 
+    FROM 
+      demons d 
+    LEFT JOIN 
+      followers f 
+    ON 
+      d.id = f.followed_id 
+      AND f.follower_id = ?
+    `;
+  const [result] = await pool.query(query, [userId]);
+  return result;
+};

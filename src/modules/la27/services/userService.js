@@ -8,6 +8,7 @@ import {
   checkIfFollowing,
   updateProfilePictureModel,
   updateBannerModel,
+  getAllUsersPreviewModel,
 } from "../models/userModel.js";
 import { processFile } from "./mediaService.js";
 
@@ -57,16 +58,12 @@ export const updateProfilePictureService = async ({
   }
 };
 
-export const updateBannerService = async ({
-  userId,
-  banner,
-}) => {
+export const updateBannerService = async ({ userId, banner }) => {
   const connection = await getConnection();
 
   try {
     await connection.beginTransaction();
     const mediaData = await processFile(banner);
-    console.log(mediaData);
     await updateBannerModel(connection, userId, mediaData.media.filename);
     await connection.commit();
   } catch (error) {
@@ -74,5 +71,14 @@ export const updateBannerService = async ({
     throw error;
   } finally {
     connection.release();
+  }
+};
+
+export const getAllUsersPreviewService = async (userId) => {
+  try {
+    const users = await getAllUsersPreviewModel(userId);
+    return users;
+  } catch (error) {
+    throw error;
   }
 };

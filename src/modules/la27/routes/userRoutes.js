@@ -13,6 +13,7 @@ import {
   getSectasFollowed,
   updateProfilePicture,
   updateBanner,
+  getAllUsers,
 } from "../controllers/userController.js";
 import authMiddleware from "../../../middlewares/authMiddleware.js";
 import multer from "multer";
@@ -22,6 +23,7 @@ const userRoutes = Router();
 
 userRoutes.get("/userData", authMiddleware, getSelfData);
 userRoutes.get("/search", authMiddleware, searchUsers);
+userRoutes.get("/getAllUsers", authMiddleware, getAllUsers);
 userRoutes.get("/followedSectas", authMiddleware, getSectasFollowed);
 userRoutes.get("/:username", authMiddleware, getUser);
 userRoutes.get("/:username/followers", getFollowers);
