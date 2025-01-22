@@ -20,7 +20,7 @@ const getTuip = async (req, res) => {
         d.demon_name as demonName,
         d.profile_picture as profilePicture,
         MAX(CASE WHEN l.demon_id = ? THEN 1 ELSE 0 END) as youLiked,
-        GROUP_CONCAT(m.file_name) as tuipMultimedia
+        GROUP_CONCAT(DISTINCT m.file_name) as tuipMultimedia
       FROM tuips t 
       INNER JOIN demons d ON t.demon_id = d.id
       LEFT JOIN likes l ON t.id = l.tuip_id
@@ -75,7 +75,7 @@ const getTuips = async (req, res) => {
         demons.demon_name as demonName,
         demons.profile_picture as profilePicture,
         MAX(CASE WHEN likes.demon_id = ? THEN 1 ELSE 0 END) as youLiked,
-        GROUP_CONCAT(media.file_name) as tuipMultimedia
+        GROUP_CONCAT(DISTINCT media.file_name) as tuipMultimedia
       FROM tuips
       INNER JOIN demons ON tuips.demon_id = demons.id
       LEFT JOIN likes ON tuips.id = likes.tuip_id
