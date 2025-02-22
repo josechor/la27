@@ -158,12 +158,10 @@ const getTuips = async (req, res) => {
         quotingCount: row.quotingCount,
         likesCount: row.likesCount,
         tuipCreatedAt: row.tuipCreatedAt,
-        user: {
-          demonId: row.demonId,
-          userName: row.userName,
-          demonName: row.demonName,
-          profilePicture: row.profilePicture,
-        },
+        demonId: row.demonId,
+        userName: row.userName,
+        demonName: row.demonName,
+        profilePicture: row.profilePicture,
         youLiked: row.youLiked,
         tuipMultimedia: row.tuipMultimedia ? row.tuipMultimedia.split(",") : [],
       };
@@ -177,12 +175,10 @@ const getTuips = async (req, res) => {
           quotingCount: row.parentQuotingCount,
           likesCount: row.parentLikesCount,
           tuipCreatedAt: row.parentCreatedAt,
-          user: {
-            demonId: row.parentDemonId,
-            userName: row.parentUserName,
-            demonName: row.parentDemonName,
-            profilePicture: row.parentProfilePicture,
-          },
+          demonId: row.parentDemonId,
+          userName: row.parentUserName,
+          demonName: row.parentDemonName,
+          profilePicture: row.parentProfilePicture,
           youLiked: row.parentYouLiked,
           tuipMultimedia: row.parentTuipMultimedia
             ? row.parentTuipMultimedia.split(",")
@@ -202,12 +198,10 @@ const getTuips = async (req, res) => {
           quotingCount: row.quotingQuotingCount,
           likesCount: row.quotingLikesCount,
           tuipCreatedAt: row.quotingCreatedAt,
-          user: {
-            demonId: row.quotingDemonId,
-            userName: row.quotingUserName,
-            demonName: row.quotingDemonName,
-            profilePicture: row.quotingProfilePicture,
-          },
+          demonId: row.quotingDemonId,
+          userName: row.quotingUserName,
+          demonName: row.quotingDemonName,
+          profilePicture: row.quotingProfilePicture,
           youLiked: row.quotingYouLiked,
           tuipMultimedia: row.quotingTuipMultimedia
             ? row.quotingTuipMultimedia.split(",")
