@@ -62,8 +62,8 @@ const getTuips = async (req, res) => {
       SELECT 
         tuips.id as tuipId, 
         tuips.content as tuipContent, 
-        tuips.parent as parent,
-        tuips.quoting as quoting,
+        tuips.parent as parentId,
+        tuips.quoting as quotingId,
         tuips.multimedia as tuipM,
         tuips.secta as secta, 
         tuips.responses_count as responsesCount,
@@ -75,15 +75,54 @@ const getTuips = async (req, res) => {
         demons.demon_name as demonName,
         demons.profile_picture as profilePicture,
         MAX(CASE WHEN likes.demon_id = ? THEN 1 ELSE 0 END) as youLiked,
-        GROUP_CONCAT(DISTINCT media.file_name) as tuipMultimedia
+        GROUP_CONCAT(DISTINCT media.file_name) as tuipMultimedia,
+
+        parentTuip.id as parentTuipId,
+        parentTuip.content as parentTuipContent,
+        parentTuip.responses_count as parentResponsesCount,
+        parentTuip.quoting_count as parentQuotingCount,
+        parentTuip.likes_count as parentLikesCount,
+        parentTuip.created_at as parentCreatedAt,
+        parentDemon.id as parentDemonId,
+        parentDemon.user_name as parentUserName,
+        parentDemon.demon_name as parentDemonName,
+        parentDemon.profile_picture as parentProfilePicture,
+        MAX(CASE WHEN parentLikes.demon_id = ? THEN 1 ELSE 0 END) as parentYouLiked,
+        GROUP_CONCAT(DISTINCT parentMedia.file_name) as parentTuipMultimedia,
+
+        quotingTuip.id as quotingTuipId,
+        quotingTuip.content as quotingTuipContent,
+        quotingTuip.responses_count as quotingResponsesCount,
+        quotingTuip.quoting_count as quotingQuotingCount,
+        quotingTuip.likes_count as quotingLikesCount,
+        quotingTuip.created_at as quotingCreatedAt,
+        quotingDemon.id as quotingDemonId,
+        quotingDemon.user_name as quotingUserName,
+        quotingDemon.demon_name as quotingDemonName,
+        quotingDemon.profile_picture as quotingProfilePicture,
+        MAX(CASE WHEN quotingLikes.demon_id = ? THEN 1 ELSE 0 END) as quotingYouLiked,
+        GROUP_CONCAT(DISTINCT quotingMedia.file_name) as quotingTuipMultimedia
+
       FROM tuips
       INNER JOIN demons ON tuips.demon_id = demons.id
       LEFT JOIN likes ON tuips.id = likes.tuip_id
       LEFT JOIN tuip_media ON tuips.id = tuip_media.tuip_id
       LEFT JOIN media ON tuip_media.media_id = media.id
+
+      LEFT JOIN tuips as parentTuip ON tuips.parent = parentTuip.id
+      LEFT JOIN demons as parentDemon ON parentTuip.demon_id = parentDemon.id
+      LEFT JOIN likes as parentLikes ON parentTuip.id = parentLikes.tuip_id
+      LEFT JOIN tuip_media as parentTuipMedia ON parentTuip.id = parentTuipMedia.tuip_id
+      LEFT JOIN media as parentMedia ON parentTuipMedia.media_id = parentMedia.id
+
+      LEFT JOIN tuips as quotingTuip ON tuips.quoting = quotingTuip.id
+      LEFT JOIN demons as quotingDemon ON quotingTuip.demon_id = quotingDemon.id
+      LEFT JOIN likes as quotingLikes ON quotingTuip.id = quotingLikes.tuip_id
+      LEFT JOIN tuip_media as quotingTuipMedia ON quotingTuip.id = quotingTuipMedia.tuip_id
+      LEFT JOIN media as quotingMedia ON quotingTuipMedia.media_id = quotingMedia.id
     `;
 
-    let params = [req.userData.id];
+    let params = [req.userData.id, req.userData.id, req.userData.id];
 
     if (authorId) {
       query += " WHERE tuips.demon_id = ?";
@@ -101,7 +140,7 @@ const getTuips = async (req, res) => {
     }
 
     query += `
-      GROUP BY tuips.id, demons.id
+      GROUP BY tuips.id, demons.id, parentTuip.id, parentDemon.id, quotingTuip.id, quotingDemon.id
       ORDER BY tuips.created_at DESC
       LIMIT ? OFFSET ?
     `;
@@ -110,17 +149,78 @@ const getTuips = async (req, res) => {
 
     const [rows] = await pool.query(query, params);
 
-    const parseRows = rows.map((row) => ({
-      ...row,
-      tuipMultimedia: row.tuipMultimedia ? row.tuipMultimedia.split(",") : [],
-    }));
-    parseRows.forEach((element) => {
-      if (element.tuipM !== null) {
-        const tm = element.tuipM.split(",");
-        element.tuipMultimedia.push(...tm);
+    const parseRows = rows.map((row) => {
+      const tuip = {
+        tuipId: row.tuipId,
+        tuipContent: row.tuipContent,
+        secta: row.secta,
+        responsesCount: row.responsesCount,
+        quotingCount: row.quotingCount,
+        likesCount: row.likesCount,
+        tuipCreatedAt: row.tuipCreatedAt,
+        user: {
+          demonId: row.demonId,
+          userName: row.userName,
+          demonName: row.demonName,
+          profilePicture: row.profilePicture,
+        },
+        youLiked: row.youLiked,
+        tuipMultimedia: row.tuipMultimedia ? row.tuipMultimedia.split(",") : [],
+      };
+
+      if (row.parentTuipId) {
+        tuip.parent = row.parentTuipId;
+        tuip.parentData = {
+          tuipId: row.parentTuipId,
+          tuipContent: row.parentTuipContent,
+          responsesCount: row.parentResponsesCount,
+          quotingCount: row.parentQuotingCount,
+          likesCount: row.parentLikesCount,
+          tuipCreatedAt: row.parentCreatedAt,
+          user: {
+            demonId: row.parentDemonId,
+            userName: row.parentUserName,
+            demonName: row.parentDemonName,
+            profilePicture: row.parentProfilePicture,
+          },
+          youLiked: row.parentYouLiked,
+          tuipMultimedia: row.parentTuipMultimedia
+            ? row.parentTuipMultimedia.split(",")
+            : [],
+        };
+      } else {
+        tuip.parent = null;
+        tuip.parentData = null;
       }
-      delete element.tuipM;
+
+      if (row.quotingTuipId) {
+        tuip.quoting = row.quotingTuipId;
+        tuip.quotingData = {
+          tuipId: row.quotingTuipId,
+          tuipContent: row.quotingTuipContent,
+          responsesCount: row.quotingResponsesCount,
+          quotingCount: row.quotingQuotingCount,
+          likesCount: row.quotingLikesCount,
+          tuipCreatedAt: row.quotingCreatedAt,
+          user: {
+            demonId: row.quotingDemonId,
+            userName: row.quotingUserName,
+            demonName: row.quotingDemonName,
+            profilePicture: row.quotingProfilePicture,
+          },
+          youLiked: row.quotingYouLiked,
+          tuipMultimedia: row.quotingTuipMultimedia
+            ? row.quotingTuipMultimedia.split(",")
+            : [],
+        };
+      } else {
+        tuip.quoting = null;
+        tuip.quotingData = null;
+      }
+
+      return tuip;
     });
+
     res.json(parseRows);
   } catch (error) {
     res.status(500).json({ message: "Internal server error", error });
